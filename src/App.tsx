@@ -45,21 +45,6 @@ const App = () => {
 
   function getCurrentCityName(position: any) {
     setCenterCoords([position.coords.latitude, position.coords.longitude]);
-
-    // let url =
-    //   "https://nominatim.openstreetmap.org/reverse?format=jsonv2" +
-    //   "&lat=" +
-    //   position.coords.latitude +
-    //   "&lon=" +
-    //   position.coords.longitude;
-
-    // fetch(url, {
-    //   method: "GET",
-    //   mode: "cors",
-    //   headers: {
-    //     "Access-Control-Allow-Origin": "https://o2cj2q.csb.app",
-    //   },
-    // }).then((response) => response.json());
   }
 
   const getData = async (url: string) => {
