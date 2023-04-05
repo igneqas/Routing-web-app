@@ -12,10 +12,12 @@ export type CoordsObject = {
 
 const App = () => {
   const [centerCoords, setCenterCoords] = useState<LatLngExpression>([0, 0]);
-  const [fromCoords, setFromCoords] = useState<CoordsObject | undefined>();
-  const [toCoords, setToCoords] = useState<CoordsObject | undefined>();
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
+  const [profile, setProfile] = useState("");
+  const [routeCoords, setRouteCoords] = useState<
+    (L.LatLngLiteral | L.LatLngTuple)[]
+  >([]);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -47,7 +49,7 @@ const App = () => {
     setCenterCoords([position.coords.latitude, position.coords.longitude]);
   }
 
-  const getData = async (url: string) => {
+  const getCoordinates = async (url: string) => {
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -67,8 +69,8 @@ const App = () => {
     }
   };
 
-  const submitHandler = async (e: any) => {
-    e.preventDefault();
+  const submitHandler = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
 
     let fromLocationUrl =
       "https://nominatim.openstreetmap.org/search?q=" +
@@ -79,10 +81,27 @@ const App = () => {
       toLocation +
       "&format=json";
 
-    const fromLocationData = await getData(fromLocationUrl);
-    setFromCoords(fromLocationData);
-    const toLocationData = await getData(toLocationUrl);
-    setToCoords(toLocationData);
+    const startPointCoordinates = await getCoordinates(fromLocationUrl);
+    const finishPointCoordinates = await getCoordinates(toLocationUrl);
+
+    if (startPointCoordinates && finishPointCoordinates) {
+      // const url = `http://localhost:17777/brouter?lonlats=${startPoint?.longitude},${startPoint?.latitude}|${finishPoint?.longitude},${finishPoint?.latitude}&nogos=25.292594717178225,54.68866926618792,100&profile=shortest&alternativeidx=0&format=geojson`;
+      const url = `http://localhost:8080/route?lonlats=${startPointCoordinates?.longitude},${startPointCoordinates?.latitude};${finishPointCoordinates?.longitude},${finishPointCoordinates?.latitude}&profile=${profile}&format=geojson&nogos=25.292594717178225,54.68866926618792,100`;
+      const response = await fetch(url, {
+        method: "GET",
+      });
+      const routeJson = await response.json();
+      const routeCoordinates = routeJson.features[0].geometry.coordinates;
+      console.log(routeCoordinates);
+      let x = [];
+      for (var i = 0; i < routeCoordinates.length; i++) {
+        x.push([
+          routeCoordinates[i][1],
+          routeCoordinates[i][0],
+        ] as LatLngExpression);
+      }
+      setRouteCoords(x);
+    }
   };
 
   return (
@@ -108,20 +127,49 @@ const App = () => {
             }}
           />
           <br />
-          <button onClick={(e) => submitHandler(e)}>Search</button>
-          <br />
-          <button>Quickest</button>
-          <button>Leisure</button>
-          <button>Mountain bike</button>
-          <button>Shortest</button>
-          <button>Clean</button>
+          <button
+            onClick={(e) => {
+              setProfile("vm-forum-liegerad-schnell");
+              submitHandler(e);
+            }}
+          >
+            Quickest
+          </button>
+          <button
+            onClick={(e) => {
+              setProfile("safety");
+              submitHandler(e);
+            }}
+          >
+            Leisure
+          </button>
+          <button
+            onClick={(e) => {
+              setProfile("trekking");
+              submitHandler(e);
+            }}
+          >
+            Mountain bike
+          </button>
+          <button
+            onClick={(e) => {
+              setProfile("shortest");
+              submitHandler(e);
+            }}
+          >
+            Shortest
+          </button>
+          <button
+            onClick={(e) => {
+              setProfile("shortest");
+              submitHandler(e);
+            }}
+          >
+            Clean
+          </button>
         </form>
       </section>
-      <Map
-        startPoint={fromCoords}
-        finishPoint={toCoords}
-        centerCoords={centerCoords}
-      ></Map>
+      <Map routeCoords={routeCoords} centerCoords={centerCoords}></Map>
     </div>
   );
 };
