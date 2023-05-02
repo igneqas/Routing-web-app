@@ -1,18 +1,23 @@
 .App {
-  /* text-align: center; */
-  /* display: flex; */
   height: 100%;
   width: 100%;
-  background-color: blanchedalmond;
 }
-/* .App {
-  font-family: sans-serif;
-  text-align: center;
+.top-toolbar {
+  height: 45px;
   display: flex;
-  justify-content: center;
+  flex-direction: row;
+  justify-content: end;
   align-items: center;
-} */
-.login-button {
-  align-items: end;
-  float: right;
+  background-color: #383838;
+}
+.top-toolbar .login-button {
+  margin: 5px;
+  height: 30px;
+  width: 70px;
+}
+.form-container {
+  margin-top: 25px;
+  margin-left: 15px;
+  position: absolute;
+  z-index: 999;
 }

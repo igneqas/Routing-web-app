@@ -4,18 +4,40 @@ import {
   Marker,
   Polyline,
   TileLayer,
+  ZoomControl,
   useMap,
 } from "react-leaflet";
 import L, { LatLngExpression } from "leaflet";
 import icon from "../../images/marker-icon.png";
+import { useEffect, useMemo, useState } from "react";
 
 interface MapProps {
   routeCoords: (L.LatLngLiteral | L.LatLngTuple)[];
   centerCoords: LatLngExpression | undefined;
+  children: any;
 }
 
 const Map = (props: MapProps) => {
-  const { routeCoords, centerCoords } = props;
+  const { routeCoords, centerCoords, children } = props;
+  const [windowSize, setWindowSize] = useState([
+    window.innerWidth,
+    window.innerHeight,
+  ]);
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      setWindowSize([window.innerWidth, window.innerHeight]);
+    };
+
+    window.addEventListener("resize", handleWindowResize);
+    return () => {
+      window.removeEventListener("resize", handleWindowResize);
+    };
+  }, []);
+
+  const mapHeight = useMemo(() => {
+    return windowSize[1] - 45;
+  }, [windowSize]);
 
   const routeLineOptions = {
     color: "red",
@@ -36,77 +58,40 @@ const Map = (props: MapProps) => {
   };
 
   return (
-    <MapContainer
-      className="Map"
-      center={centerCoords}
-      zoom={14}
-      scrollWheelZoom={true}
-    >
-      {/* <TileLayer
+    <div style={{ height: mapHeight, width: windowSize[0] }}>
+      <MapContainer
+        className="Map"
+        center={centerCoords}
+        zoom={14}
+        scrollWheelZoom={true}
+        zoomControl={false}
+      >
+        {/* <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       /> */}
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"
-      />
-      <Polyline pathOptions={routeLineOptions} positions={routeCoords} />
-      {routeCoords.length > 0 ? (
-        <div>
-          <Marker position={routeCoords[0]} icon={customIcon}></Marker>
-          <Marker
-            position={routeCoords[routeCoords.length - 1]}
-            icon={customIcon}
-          ></Marker>
-        </div>
-      ) : (
-        <></>
-      )}
-      <MapView />
-    </MapContainer>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"
+        />
+        <ZoomControl position="bottomright" />
+        <Polyline pathOptions={routeLineOptions} positions={routeCoords} />
+        {routeCoords.length > 0 ? (
+          <div>
+            <Marker position={routeCoords[0]} icon={customIcon}></Marker>
+            <Marker
+              position={routeCoords[routeCoords.length - 1]}
+              icon={customIcon}
+            ></Marker>
+          </div>
+        ) : (
+          <></>
+        )}
+        <MapView />
+        {children}
+      </MapContainer>
+    </div>
   );
-  /* <MapContainer center={center} zoom={15} minZoom={0} id="mapid">
-<LayersControl position={"bottomright"}>
-  <LayersControl.BaseLayer checked name="Base Layer">
-    <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-  </LayersControl.BaseLayer>
-  <LayersControl.Overlay checked={false} name="Regional Districts">
-    <WMSTileLayer
-      key={Math.random()}
-      transparent={true}
-      opacity={0.5}
-      format={"image/png"}
-      url="http://openmaps.gov.bc.ca/geo/ows"
-      layers={"WHSE_LEGAL_ADMIN_BOUNDARIES.ABMS_REGIONAL_DISTRICTS_SP"}
-    />
-  </LayersControl.Overlay>
-  <LayersControl.Overlay checked={false} name="Old Growth">
-    <WMSTileLayer
-      key={Math.random()}
-      transparent={true}
-      opacity={0.5}
-      format={"image/png"}
-      url="http://openmaps.gov.bc.ca/geo/ows"
-      layers={"WHSE_FOREST_VEGETATION.OGSR_TAP_PRIORITY_DEF_AREA_SP"}
-    />
-  </LayersControl.Overlay>
-  <LayersControl.Overlay checked={false} name="Fed Parks">
-    <WMSTileLayer
-      key={Math.random()}
-      transparent={true}
-      opacity={0.5}
-      format={"image/png"}
-      url="http://openmaps.gov.bc.ca/geo/ows"
-      layers={"WHSE_ADMIN_BOUNDARIES.CLAB_NATIONAL_PARKS"}
-    />
-  </LayersControl.Overlay>
-  <LayersControl.Overlay
-    checked={false}
-    name="Licensed Pizza Establishments"
-  >
-  </LayersControl.Overlay>
-</LayersControl>
-</MapContainer> */
 };
 
 export default Map;

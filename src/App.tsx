@@ -1,9 +1,18 @@
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 import Map from "./components/map/Map";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SearchBar from "./components/searchBar/SearchBar";
-import { LatLngExpression } from "leaflet";
+import LoginModal from "./components/login/LoginModal";
+import L, { LatLngExpression } from "leaflet";
+import RouteDetails, {
+  RouteDetailsObject,
+} from "./components/routeDetails/RouteDetails";
+import { getToken, setToken } from "./utils/TokenHandler";
+import { formatRoute } from "./utils/RouteUtils";
+import SideMenu from "./components/sideMenu/SideMenu";
+import { Box } from "@mui/material";
+import RouteTypeSelection from "./components/routeTypeSelection/RouteTypeSelection";
 
 export type CoordsObject = {
   latitude: string;
@@ -12,12 +21,18 @@ export type CoordsObject = {
 
 const App = () => {
   const [centerCoords, setCenterCoords] = useState<LatLngExpression>([0, 0]);
-  const [fromLocation, setFromLocation] = useState("");
-  const [toLocation, setToLocation] = useState("");
-  const [profile, setProfile] = useState("");
+  const [fromLocation, setFromLocation] = useState("Kareiviu g. 20");
+  const [toLocation, setToLocation] = useState("Ozo g. 20");
   const [routeCoords, setRouteCoords] = useState<
     (L.LatLngLiteral | L.LatLngTuple)[]
   >([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [route, setRoute] = useState(null);
+
+  useEffect(() => {
+    const token = getToken();
+    setIsLoggedIn(token ? true : false);
+  }, [sessionStorage]);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -69,9 +84,7 @@ const App = () => {
     }
   };
 
-  const submitHandler = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-
+  const routeTypeHandler = async (profile: string) => {
     let fromLocationUrl =
       "https://nominatim.openstreetmap.org/search?q=" +
       fromLocation +
@@ -85,91 +98,144 @@ const App = () => {
     const finishPointCoordinates = await getCoordinates(toLocationUrl);
 
     if (startPointCoordinates && finishPointCoordinates) {
-      // const url = `http://localhost:17777/brouter?lonlats=${startPoint?.longitude},${startPoint?.latitude}|${finishPoint?.longitude},${finishPoint?.latitude}&nogos=25.292594717178225,54.68866926618792,100&profile=shortest&alternativeidx=0&format=geojson`;
-      const url = `http://localhost:8080/route?lonlats=${startPointCoordinates?.longitude},${startPointCoordinates?.latitude};${finishPointCoordinates?.longitude},${finishPointCoordinates?.latitude}&profile=${profile}&format=geojson&nogos=25.292594717178225,54.68866926618792,100`;
+      const url = `http://localhost:8080/route/generate?lonlats=${startPointCoordinates?.longitude},${startPointCoordinates?.latitude};${finishPointCoordinates?.longitude},${finishPointCoordinates?.latitude};25.283256533410132,54.703824044178674&profile=${profile}&format=geojson`;
+      // const url = `http://localhost:8080/route/generate?lonlats=${startPointCoordinates?.longitude},${startPointCoordinates?.latitude};${finishPointCoordinates?.longitude},${finishPointCoordinates?.latitude}&profile=${profile}&format=geojson`;
       const response = await fetch(url, {
         method: "GET",
       });
       const routeJson = await response.json();
+      setRoute(routeJson);
       const routeCoordinates = routeJson.features[0].geometry.coordinates;
-      console.log(routeCoordinates);
-      let x = [];
-      for (var i = 0; i < routeCoordinates.length; i++) {
-        x.push([
-          routeCoordinates[i][1],
-          routeCoordinates[i][0],
-        ] as LatLngExpression);
-      }
-      setRouteCoords(x);
+      parseCoordinates(routeCoordinates);
     }
   };
 
+  const parseCoordinates = (routeCoordinates: any) => {
+    let x = [];
+    for (var i = 0; i < routeCoordinates.length; i++) {
+      x.push([
+        routeCoordinates[i][1],
+        routeCoordinates[i][0],
+      ] as LatLngExpression);
+    }
+    setRouteCoords(x);
+  };
+
+  const handleSaveSubmit = async (name: string) => {
+    const token = getToken();
+    if (!token) {
+      window.location.reload();
+      return;
+    }
+    const bearerToken = "Bearer " + token;
+    const response = await fetch("http://localhost:8080/route", {
+      method: "POST",
+      headers: {
+        Authorization: bearerToken,
+      },
+      body: JSON.stringify(formatRoute(route, name)),
+    });
+    if (response.status !== 200) {
+      window.location.reload();
+      setToken("");
+      return;
+    }
+  };
+
+  const details = useMemo(() => {
+    let distance;
+    let time;
+    let ascend;
+    let type;
+    let name;
+    try {
+      distance = (route as any)?.features[0].properties.trackLength;
+      time = (route as any)?.features[0].properties.totalTime;
+      ascend = (route as any)?.features[0].properties.filteredAscend;
+      type = (route as any)?.features[0].properties.name;
+    } catch {
+      distance = (route as any)?.distance;
+      time = (route as any)?.time;
+      ascend = (route as any)?.ascend;
+      type = (route as any)?.type;
+      name = (route as any)?.name;
+    }
+
+    return { distance, time, ascend, type, name } as RouteDetailsObject;
+  }, [route]);
+
+  const handleViewRouteInfo = (route: any) => {
+    setRoute(route);
+    parseCoordinates(route.coordinates);
+  };
+
+  const SearchFormStyle = {
+    width: "320px",
+    bgcolor: "darkgray",
+    border: "2px solid #6c6c6c",
+    boxShadow: 24,
+    p: 4,
+    display: "flex",
+    flexDirection: "column",
+    padding: "20px",
+    paddingTop: "10px",
+  };
+
+  useEffect(() => {
+    const element = document.getElementById("search");
+    if (element) {
+      L.DomEvent.disableClickPropagation(element!);
+    }
+  });
+
   return (
     <div className="App">
-      <div className="login-button">
-        <button>Log In</button>
+      <div className="top-toolbar">
+        {!isLoggedIn ? (
+          <LoginModal />
+        ) : (
+          <SideMenu handleViewRouteInfo={handleViewRouteInfo} />
+        )}
       </div>
-      <section className="form-container">
-        <form>
-          <SearchBar
-            searchText={fromLocation}
-            placeholder={"Starting point"}
-            onChange={(value) => {
-              setFromLocation(value);
-            }}
-          />
-          <br />
-          <SearchBar
-            searchText={toLocation}
-            placeholder={"Finish point"}
-            onChange={(value) => {
-              setToLocation(value);
-            }}
-          />
-          <br />
-          <button
-            onClick={(e) => {
-              setProfile("vm-forum-liegerad-schnell");
-              submitHandler(e);
-            }}
-          >
-            Quickest
-          </button>
-          <button
-            onClick={(e) => {
-              setProfile("safety");
-              submitHandler(e);
-            }}
-          >
-            Leisure
-          </button>
-          <button
-            onClick={(e) => {
-              setProfile("trekking");
-              submitHandler(e);
-            }}
-          >
-            Mountain bike
-          </button>
-          <button
-            onClick={(e) => {
-              setProfile("shortest");
-              submitHandler(e);
-            }}
-          >
-            Shortest
-          </button>
-          <button
-            onClick={(e) => {
-              setProfile("shortest");
-              submitHandler(e);
-            }}
-          >
-            Clean
-          </button>
-        </form>
-      </section>
-      <Map routeCoords={routeCoords} centerCoords={centerCoords}></Map>
+      <Map routeCoords={routeCoords} centerCoords={centerCoords}>
+        <section className="form-container">
+          <div id="search">
+            <Box sx={SearchFormStyle}>
+              <SearchBar
+                searchText={fromLocation}
+                placeholder={"Starting point"}
+                onChange={(value) => {
+                  setFromLocation(value);
+                }}
+              />
+              <SearchBar
+                searchText={toLocation}
+                placeholder={"Finish point"}
+                onChange={(value) => {
+                  setToLocation(value);
+                }}
+              />
+              {/* <SearchBar
+                searchText={"Žalgirio g. 105"}
+                placeholder={"Finish point"}
+                onChange={(value) => {
+                  setToLocation(value);
+                }}
+              /> */}
+              <RouteTypeSelection submitHandler={routeTypeHandler} />
+            </Box>
+            {route !== null ? (
+              <RouteDetails
+                routeDetails={details}
+                isLoggedIn={isLoggedIn}
+                handleSaveSubmit={handleSaveSubmit}
+              />
+            ) : (
+              <></>
+            )}
+          </div>
+        </section>
+      </Map>
     </div>
   );
 };

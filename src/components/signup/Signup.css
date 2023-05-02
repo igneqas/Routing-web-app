@@ -1,0 +1,9 @@
+.login-button-row {
+  display: flex;
+  justify-content: end;
+}
+
+.signup-button-row {
+  display: flex;
+  justify-content: center;
+}

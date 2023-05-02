@@ -1,3 +1,5 @@
+import { TextField } from "@mui/material";
+
 interface SearchBarProps {
   searchText: string;
   placeholder: string;
@@ -7,19 +9,20 @@ interface SearchBarProps {
 const SearchBar = (props: SearchBarProps) => {
   const { searchText, placeholder, onChange } = props;
   const barStyle = {
-    width: "20rem",
     background: "#F0F0F0",
-    border: "none",
-    padding: "0.5rem",
-    margin: "5px",
+    color: "black",
   };
   return (
-    <input
-      style={barStyle}
-      key="search-bar"
-      value={searchText}
+    <TextField
+      margin="dense"
+      variant="outlined"
+      onChange={(value) => {
+        onChange(value.target.value);
+      }}
       placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
+      value={searchText}
+      style={barStyle}
+      size="small"
     />
   );
 };
