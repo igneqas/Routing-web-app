@@ -30,7 +30,6 @@ const App = () => {
   const [route, setRoute] = useState(null);
 
   const isMobileDevice = useMediaQuery("(max-width: 370px)");
-  console.log(isMobileDevice);
 
   useEffect(() => {
     const token = getToken();

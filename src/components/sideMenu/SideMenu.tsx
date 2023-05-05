@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -11,6 +12,7 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import MapIcon from "@mui/icons-material/Map";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { getToken, setToken } from "../../utils/TokenHandler";
 
 interface SideMenuParams {
@@ -38,6 +40,26 @@ const SideMenu = (params: SideMenuParams) => {
       setIsOpen(open);
     };
 
+  const handleDeleteRoute = async (route: any) => {
+    const token = getToken();
+    if (!token) {
+      window.location.reload();
+      return;
+    }
+    const bearerToken = "Bearer " + token;
+    const response = await fetch(`http://localhost:8080/route?id=${route.id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: bearerToken,
+      },
+    });
+    if (response.status !== 200) {
+      window.location.reload();
+      setToken("");
+      return;
+    }
+  };
+
   const list = () => (
     <Box
       sx={{ width: 250 }}
@@ -50,8 +72,8 @@ const SideMenu = (params: SideMenuParams) => {
       </Typography>
       <List>
         {[...routes].map((route) => (
-          <ListItem disablePadding onClick={() => handleViewRouteInfo(route)}>
-            <ListItemButton>
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => handleViewRouteInfo(route)}>
               <ListItemIcon>
                 <MapIcon />
               </ListItemIcon>
@@ -62,6 +84,21 @@ const SideMenu = (params: SideMenuParams) => {
                 />
               </div>
             </ListItemButton>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "end",
+                marginLeft: "10px",
+                paddingRight: "7px",
+              }}
+            >
+              <IconButton
+                aria-label="delete"
+                onClick={() => handleDeleteRoute(route)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </div>
           </ListItem>
         ))}
       </List>
