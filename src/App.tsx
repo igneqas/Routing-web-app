@@ -11,7 +11,7 @@ import RouteDetails, {
 import { getToken, setToken } from "./utils/TokenHandler";
 import { formatRoute } from "./utils/RouteUtils";
 import SideMenu from "./components/sideMenu/SideMenu";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import RouteTypeSelection from "./components/routeTypeSelection/RouteTypeSelection";
 
 export type CoordsObject = {
@@ -28,6 +28,9 @@ const App = () => {
   >([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [route, setRoute] = useState(null);
+
+  const isMobileDevice = useMediaQuery("(max-width: 370px)");
+  console.log(isMobileDevice);
 
   useEffect(() => {
     const token = getToken();
@@ -169,17 +172,18 @@ const App = () => {
     parseCoordinates(route.coordinates);
   };
 
-  const SearchFormStyle = {
-    width: "320px",
-    bgcolor: "darkgray",
-    border: "2px solid #6c6c6c",
-    boxShadow: 24,
-    p: 4,
-    display: "flex",
-    flexDirection: "column",
-    padding: "20px",
-    paddingTop: "10px",
-  };
+  const SearchFormStyle = useMemo(() => {
+    return {
+      bgcolor: "darkgray",
+      border: "2px solid #6c6c6c",
+      boxShadow: 24,
+      p: 4,
+      display: "flex",
+      flexDirection: "column",
+      padding: isMobileDevice ? "0px" : "20px",
+      paddingTop: isMobileDevice ? "5px" : "10px",
+    };
+  }, [isMobileDevice]);
 
   useEffect(() => {
     const element = document.getElementById("search");
@@ -192,7 +196,7 @@ const App = () => {
     <div className="App">
       <div className="top-toolbar">
         {!isLoggedIn ? (
-          <LoginModal />
+          <LoginModal isMobileDevice={isMobileDevice} />
         ) : (
           <SideMenu handleViewRouteInfo={handleViewRouteInfo} />
         )}
@@ -207,6 +211,7 @@ const App = () => {
                 onChange={(value) => {
                   setFromLocation(value);
                 }}
+                isMobileDevice={isMobileDevice}
               />
               <SearchBar
                 searchText={toLocation}
@@ -214,6 +219,7 @@ const App = () => {
                 onChange={(value) => {
                   setToLocation(value);
                 }}
+                isMobileDevice={isMobileDevice}
               />
               {/* <SearchBar
                 searchText={"Žalgirio g. 105"}
@@ -222,7 +228,10 @@ const App = () => {
                   setToLocation(value);
                 }}
               /> */}
-              <RouteTypeSelection submitHandler={routeTypeHandler} />
+              <RouteTypeSelection
+                submitHandler={routeTypeHandler}
+                isMobileDevice={isMobileDevice}
+              />
             </Box>
             {route !== null ? (
               <RouteDetails

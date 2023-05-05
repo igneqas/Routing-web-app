@@ -3,10 +3,11 @@ import { useState } from "react";
 
 interface RouteTypeSelectionProps {
   submitHandler: (profile: string) => void;
+  isMobileDevice: boolean;
 }
 
 const RouteTypeSelection = (props: RouteTypeSelectionProps) => {
-  const { submitHandler } = props;
+  const { submitHandler, isMobileDevice } = props;
   const [selection, setSelection] = useState("");
 
   const handleChange = (
@@ -28,13 +29,13 @@ const RouteTypeSelection = (props: RouteTypeSelectionProps) => {
     flexDirection: "row" as "row",
     flexWrap: "wrap" as "wrap",
     justifyContent: "center",
-    marginTop: "10px",
+    marginTop: isMobileDevice ? "3px" : "10px",
   };
 
   const style = {
     color: "black",
     backgroundColor: "#e1ac86",
-    fontSize: "medium",
+    fontSize: isMobileDevice ? "small" : "medium",
     border: "1px solid #6c6c6c",
     margin: "4px",
     padding: "5px",

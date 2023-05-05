@@ -1,27 +1,34 @@
 import { Box, Button, Modal } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Login from "./Login";
 import Signup from "../signup/Signup";
 
-const LoginModal = () => {
+interface LoginModalProps {
+  isMobileDevice: boolean;
+}
+
+const LoginModal = (props: LoginModalProps) => {
+  const { isMobileDevice } = props;
   const [open, setOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const style = {
-    position: "absolute" as "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 400,
-    bgcolor: "background.paper",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-    display: "flex",
-    flexDirection: "column",
-  };
+  const style = useMemo(() => {
+    return {
+      position: "absolute" as "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: isMobileDevice ? "100%" : "400px",
+      bgcolor: "background.paper",
+      border: "2px solid #000",
+      boxShadow: 24,
+      p: 4,
+      display: "flex",
+      flexDirection: "column",
+    };
+  }, [isMobileDevice]);
 
   const openSignup = () => {
     setSignupOpen(true);
