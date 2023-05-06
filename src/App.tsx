@@ -1,7 +1,7 @@
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 import Map from "./components/map/Map";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SearchBar from "./components/searchBar/SearchBar";
 import LoginModal from "./components/login/LoginModal";
 import L, { LatLngExpression } from "leaflet";
@@ -13,21 +13,36 @@ import { formatRoute } from "./utils/RouteUtils";
 import SideMenu from "./components/sideMenu/SideMenu";
 import { Box, useMediaQuery } from "@mui/material";
 import RouteTypeSelection from "./components/routeTypeSelection/RouteTypeSelection";
+import LocationChangeRow from "./components/locationChangeRow/LocationChangeRow";
 
 export type CoordsObject = {
   latitude: string;
   longitude: string;
 };
 
+export interface LocationObject {
+  name: string;
+  latitude?: string;
+  longitude?: string;
+}
+
 const App = () => {
   const [centerCoords, setCenterCoords] = useState<LatLngExpression>([0, 0]);
-  const [fromLocation, setFromLocation] = useState("Kareiviu g. 20");
-  const [toLocation, setToLocation] = useState("Ozo g. 20");
+  const [locations, setLocations] = useState<LocationObject[]>([
+    {
+      name: "",
+    },
+    {
+      name: "",
+    },
+  ]);
   const [routeCoords, setRouteCoords] = useState<
     (L.LatLngLiteral | L.LatLngTuple)[]
   >([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [route, setRoute] = useState(null);
+  const [tripType, setTripType] = useState("vm-forum-liegerad-schnell");
+  const [isSearchBarActive, setIsSearchBarActive] = useState(false);
 
   const isMobileDevice = useMediaQuery("(max-width: 370px)");
 
@@ -37,12 +52,22 @@ const App = () => {
   }, [sessionStorage]);
 
   useEffect(() => {
+    if (
+      !locations.some(
+        (location) => !location.latitude || !location.longitude
+      ) &&
+      !isSearchBarActive
+    )
+      generateRoute();
+  }, [tripType, locations, isSearchBarActive]);
+
+  useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       getCurrentCityName,
       error,
       options
     );
-  }, []);
+  }, [navigator]);
 
   const error = (err: any) => {
     if (
@@ -63,53 +88,24 @@ const App = () => {
   };
 
   function getCurrentCityName(position: any) {
+    console.log("HMM");
     setCenterCoords([position.coords.latitude, position.coords.longitude]);
   }
 
-  const getCoordinates = async (url: string) => {
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Access-Control-Allow-Origin": "https://o2cj2q.csb.app",
-        },
-      });
-      const responseJson = await response.json();
-      const coordsData = {
-        latitude: responseJson[0].lat,
-        longitude: responseJson[0].lon,
-      } as CoordsObject;
-      return coordsData;
-    } catch (e: any) {
-      console.log("Failed to get coordinates");
-    }
-  };
-
-  const routeTypeHandler = async (profile: string) => {
-    let fromLocationUrl =
-      "https://nominatim.openstreetmap.org/search?q=" +
-      fromLocation +
-      "&format=json";
-    let toLocationUrl =
-      "https://nominatim.openstreetmap.org/search?q=" +
-      toLocation +
-      "&format=json";
-
-    const startPointCoordinates = await getCoordinates(fromLocationUrl);
-    const finishPointCoordinates = await getCoordinates(toLocationUrl);
-
-    if (startPointCoordinates && finishPointCoordinates) {
-      const url = `http://localhost:8080/route/generate?lonlats=${startPointCoordinates?.longitude},${startPointCoordinates?.latitude};${finishPointCoordinates?.longitude},${finishPointCoordinates?.latitude};25.283256533410132,54.703824044178674&profile=${profile}&format=geojson`;
-      // const url = `http://localhost:8080/route/generate?lonlats=${startPointCoordinates?.longitude},${startPointCoordinates?.latitude};${finishPointCoordinates?.longitude},${finishPointCoordinates?.latitude}&profile=${profile}&format=geojson`;
-      const response = await fetch(url, {
-        method: "GET",
-      });
-      const routeJson = await response.json();
-      setRoute(routeJson);
-      const routeCoordinates = routeJson.features[0].geometry.coordinates;
-      parseCoordinates(routeCoordinates);
-    }
+  const generateRoute = async () => {
+    let formattedCoordinates = "";
+    locations.forEach((location) => {
+      formattedCoordinates += `${location?.longitude},${location?.latitude};`;
+    });
+    formattedCoordinates = formattedCoordinates.slice(0, -1);
+    const url = `http://localhost:8080/route/generate?lonlats=${formattedCoordinates}&profile=${tripType}&format=geojson`;
+    const response = await fetch(url, {
+      method: "GET",
+    });
+    const routeJson = await response.json();
+    setRoute(routeJson);
+    const routeCoordinates = routeJson.features[0].geometry.coordinates;
+    parseCoordinates(routeCoordinates);
   };
 
   const parseCoordinates = (routeCoordinates: any) => {
@@ -204,31 +200,26 @@ const App = () => {
         <section className="form-container">
           <div id="search">
             <Box sx={SearchFormStyle}>
-              <SearchBar
-                searchText={fromLocation}
-                placeholder={"Starting point"}
-                onChange={(value) => {
-                  setFromLocation(value);
-                }}
-                isMobileDevice={isMobileDevice}
+              {locations.map((location, index) => (
+                <SearchBar
+                  selectedLocation={location}
+                  placeholder={"Enter location"}
+                  onChange={(value) => {
+                    setLocations((prevState) => {
+                      prevState[index] = value;
+                      return [...prevState];
+                    });
+                  }}
+                  isMobileDevice={isMobileDevice}
+                  setIsActive={(value: boolean) => setIsSearchBarActive(value)}
+                />
+              ))}
+              <LocationChangeRow
+                setLocations={setLocations}
+                inputCount={locations.length}
               />
-              <SearchBar
-                searchText={toLocation}
-                placeholder={"Finish point"}
-                onChange={(value) => {
-                  setToLocation(value);
-                }}
-                isMobileDevice={isMobileDevice}
-              />
-              {/* <SearchBar
-                searchText={"Žalgirio g. 105"}
-                placeholder={"Finish point"}
-                onChange={(value) => {
-                  setToLocation(value);
-                }}
-              /> */}
               <RouteTypeSelection
-                submitHandler={routeTypeHandler}
+                changeHandler={(value: string) => setTripType(value)}
                 isMobileDevice={isMobileDevice}
               />
             </Box>

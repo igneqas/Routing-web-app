@@ -2,12 +2,12 @@ import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { useState } from "react";
 
 interface RouteTypeSelectionProps {
-  submitHandler: (profile: string) => void;
+  changeHandler: (profile: string) => void;
   isMobileDevice: boolean;
 }
 
 const RouteTypeSelection = (props: RouteTypeSelectionProps) => {
-  const { submitHandler, isMobileDevice } = props;
+  const { changeHandler, isMobileDevice } = props;
   const [selection, setSelection] = useState("");
 
   const handleChange = (
@@ -17,11 +17,11 @@ const RouteTypeSelection = (props: RouteTypeSelectionProps) => {
     event.stopPropagation();
 
     if (newSelection === null) {
-      submitHandler(selection);
+      changeHandler(selection);
       return;
     }
     setSelection(newSelection);
-    submitHandler(newSelection);
+    changeHandler(newSelection);
   };
 
   const groupStyle = {

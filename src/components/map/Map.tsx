@@ -5,11 +5,11 @@ import {
   Polyline,
   TileLayer,
   ZoomControl,
-  useMap,
 } from "react-leaflet";
 import L, { LatLngExpression } from "leaflet";
 import icon from "../../images/marker-icon.png";
 import { useEffect, useMemo, useState } from "react";
+import MapView from "../mapView/MapView";
 
 interface MapProps {
   routeCoords: (L.LatLngLiteral | L.LatLngTuple)[];
@@ -51,12 +51,6 @@ const Map = (props: MapProps) => {
     iconAnchor: [12, 33],
   });
 
-  const MapView = () => {
-    let map = useMap();
-    map.setView(centerCoords!, map.getZoom());
-    return null;
-  };
-
   return (
     <div style={{ height: mapHeight, width: windowSize[0] }}>
       <MapContainer
@@ -87,7 +81,7 @@ const Map = (props: MapProps) => {
         ) : (
           <></>
         )}
-        <MapView />
+        <MapView centerCoords={centerCoords} />
         {children}
       </MapContainer>
     </div>
