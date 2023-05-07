@@ -98,7 +98,7 @@ const App = () => {
       formattedCoordinates += `${location?.longitude},${location?.latitude};`;
     });
     formattedCoordinates = formattedCoordinates.slice(0, -1);
-    const url = `http://localhost:8080/route/generate?lonlats=${formattedCoordinates}&profile=${tripType}&format=geojson`;
+    const url = `http://localhost:8080/route/generate?lonlats=${formattedCoordinates}&profile=${tripType}`;
     const response = await fetch(url, {
       method: "GET",
     });

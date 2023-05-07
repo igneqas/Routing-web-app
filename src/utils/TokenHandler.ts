@@ -5,3 +5,8 @@ export const setToken = (token: string) => {
 export const getToken = () => {
   return sessionStorage.getItem("token");
 };
+
+export const signOut = () => {
+  setToken("");
+  window.location.reload();
+};

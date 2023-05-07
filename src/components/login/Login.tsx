@@ -79,6 +79,7 @@ const Login = (params: SignupParams) => {
           setPassword(value.target.value);
         }}
         margin="dense"
+        type="password"
       />
       <div className="login-window-login-button-row">
         <Button

@@ -13,7 +13,7 @@ import {
 import React, { useState } from "react";
 import MapIcon from "@mui/icons-material/Map";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getToken, setToken } from "../../utils/TokenHandler";
+import { getToken, setToken, signOut } from "../../utils/TokenHandler";
 
 interface SideMenuParams {
   handleViewRouteInfo: (route: any) => void;
@@ -145,6 +145,16 @@ const SideMenu = (params: SideMenuParams) => {
         onClick={toggleDrawer(true)}
       >
         View saved routes
+      </Button>
+      <Button
+        className="sign-out-button"
+        variant="contained"
+        size="small"
+        style={buttonStyle}
+        color="primary"
+        onClick={() => signOut()}
+      >
+        Sign Out
       </Button>
       <Drawer anchor={"right"} open={isOpen} onClose={toggleDrawer(false)}>
         {list()}

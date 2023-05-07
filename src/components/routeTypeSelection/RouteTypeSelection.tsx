@@ -29,7 +29,6 @@ const RouteTypeSelection = (props: RouteTypeSelectionProps) => {
     flexDirection: "row" as "row",
     flexWrap: "wrap" as "wrap",
     justifyContent: "center",
-    marginTop: isMobileDevice ? "3px" : "10px",
   };
 
   const style = {
