@@ -3,7 +3,7 @@ import "leaflet/dist/leaflet.css";
 import Map from "./components/map/Map";
 import { useEffect, useMemo, useState } from "react";
 import SearchBar from "./components/searchBar/SearchBar";
-import LoginModal from "./components/login/LoginModal";
+import LoginModal from "./components/loginModal/LoginModal";
 import L, { LatLngExpression } from "leaflet";
 import RouteDetails, {
   RouteDetailsObject,
@@ -88,7 +88,6 @@ const App = () => {
   };
 
   function getCurrentCityName(position: any) {
-    console.log("HMM");
     setCenterCoords([position.coords.latitude, position.coords.longitude]);
   }
 

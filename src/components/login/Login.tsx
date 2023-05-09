@@ -9,7 +9,8 @@ interface SignupParams {
 
 const Login = (params: SignupParams) => {
   const { closeModal, openSignup } = params;
-  const [inputError, setInputError] = useState(false);
+  const [emailInputError, setEmailInputError] = useState(false);
+  const [passwordInputError, setPasswordInputError] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -25,11 +26,18 @@ const Login = (params: SignupParams) => {
 
   const handleLoginSubmit = async (e: any) => {
     e.preventDefault();
-    if (!email || !password) {
-      setInputError(true);
+    if (!email) {
+      setEmailInputError(true);
       return;
     }
-    setInputError(false);
+    setEmailInputError(false);
+
+    if (!password) {
+      setPasswordInputError(true);
+      return;
+    }
+    setPasswordInputError(false);
+
     try {
       const token = await loginUser({
         email,
@@ -39,7 +47,8 @@ const Login = (params: SignupParams) => {
       closeModal();
       window.location.reload();
     } catch {
-      setInputError(true);
+      setEmailInputError(true);
+      setPasswordInputError(true);
     }
   };
 
@@ -60,7 +69,7 @@ const Login = (params: SignupParams) => {
   return (
     <>
       <TextField
-        error={inputError}
+        error={emailInputError}
         id="email-field"
         label="Email"
         variant="outlined"
@@ -70,8 +79,8 @@ const Login = (params: SignupParams) => {
         margin="dense"
       />
       <TextField
-        error={inputError}
-        helperText={inputError ? "Wrong login." : undefined}
+        error={passwordInputError}
+        helperText={passwordInputError ? "Wrong login." : undefined}
         id="password-field"
         label="Password"
         variant="outlined"

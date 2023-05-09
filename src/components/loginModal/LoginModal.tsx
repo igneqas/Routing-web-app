@@ -1,6 +1,6 @@
 import { Box, Button, Modal } from "@mui/material";
 import { useMemo, useState } from "react";
-import Login from "./Login";
+import Login from "../login/Login";
 import Signup from "../signup/Signup";
 
 interface LoginModalProps {

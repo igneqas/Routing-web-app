@@ -4,7 +4,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { LocationObject } from "../../App";
 import "./LocationChangeRow.css";
 
-interface LocationChangeRowProps {
+export interface LocationChangeRowProps {
   setLocations: (value: React.SetStateAction<LocationObject[]>) => void;
   inputCount: number;
 }

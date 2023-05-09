@@ -3,7 +3,7 @@ import "./SearchBar.css";
 import { useCallback, useEffect, useState } from "react";
 import { LocationObject } from "../../App";
 
-interface SearchBarProps {
+export interface SearchBarProps {
   selectedLocation: LocationObject;
   placeholder: string;
   onChange: (location: LocationObject) => void;

@@ -149,7 +149,6 @@ const Signup = (params: SignupParams) => {
       closeModal();
       window.location.reload();
     } catch {
-      console.log("OLA");
       setUsernameInputError({ isError: true });
       setEmailInputError({ isError: true });
       setPasswordInputError({ isError: true });

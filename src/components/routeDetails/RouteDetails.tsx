@@ -11,7 +11,7 @@ export interface RouteDetailsObject {
   name?: string;
 }
 
-interface RouteDetailsParams {
+export interface RouteDetailsParams {
   routeDetails: RouteDetailsObject;
   isLoggedIn: boolean;
   handleSaveSubmit: (name: string) => void;

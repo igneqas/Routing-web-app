@@ -1,7 +1,7 @@
 import { Box, Button, Modal, TextField } from "@mui/material";
 import { useState } from "react";
 
-interface SaveRouteModalParams {
+export interface SaveRouteModalParams {
   handleSaveSubmit: (name: string) => void;
   open: boolean;
   handleClose: () => void;

@@ -1,7 +1,7 @@
 import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { useState } from "react";
 
-interface RouteTypeSelectionProps {
+export interface RouteTypeSelectionProps {
   changeHandler: (profile: string) => void;
   isMobileDevice: boolean;
 }
@@ -66,8 +66,6 @@ const RouteTypeSelection = (props: RouteTypeSelectionProps) => {
       <ToggleButton value="hiking-mountain" style={style}>
         Mountain bike
       </ToggleButton>
-      {/* <ToggleButton value="android">Android</ToggleButton>
-    <ToggleButton value="ios">iOS</ToggleButton> */}
     </ToggleButtonGroup>
   );
 };
