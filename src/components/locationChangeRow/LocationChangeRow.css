@@ -1,4 +1,14 @@
 .add-row {
   display: flex;
+  justify-content: space-between;
+}
+
+.alternative {
+  display: flex;
+  justify-content: start;
+}
+
+.actions {
+  display: flex;
   justify-content: end;
 }

@@ -10,15 +10,18 @@ import L, { LatLngExpression } from "leaflet";
 import icon from "../../images/marker-icon.png";
 import { useEffect, useMemo, useState } from "react";
 import MapView from "../mapView/MapView";
+import { getRouteColor } from "../../utils/RouteUtils";
 
 interface MapProps {
   routeCoords: (L.LatLngLiteral | L.LatLngTuple)[];
   centerCoords: LatLngExpression | undefined;
   children: any;
+  suggestionRoutesCoordinates: any[];
 }
 
 const Map = (props: MapProps) => {
-  const { routeCoords, centerCoords, children } = props;
+  const { routeCoords, centerCoords, children, suggestionRoutesCoordinates } =
+    props;
   const [windowSize, setWindowSize] = useState([
     window.innerWidth,
     window.innerHeight,
@@ -43,6 +46,14 @@ const Map = (props: MapProps) => {
     color: "red",
     stroke: true,
     weight: 5,
+  };
+
+  const suggestionRouteLineOptions = (index: number) => {
+    return {
+      color: getRouteColor(index),
+      stroke: true,
+      weight: 5,
+    };
   };
 
   const customIcon = new L.Icon({
@@ -70,6 +81,12 @@ const Map = (props: MapProps) => {
         />
         <ZoomControl position="bottomright" />
         <Polyline pathOptions={routeLineOptions} positions={routeCoords} />
+        {[...suggestionRoutesCoordinates].map((coordinates, index) => (
+          <Polyline
+            pathOptions={suggestionRouteLineOptions(index)}
+            positions={coordinates}
+          />
+        ))}
         {routeCoords.length > 0 ? (
           <div>
             <Marker position={routeCoords[0]} icon={customIcon}></Marker>

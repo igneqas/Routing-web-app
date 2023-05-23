@@ -41,18 +41,4 @@ describe("Login", () => {
     expect(emailField.parentElement).not.toHaveClass("Mui-error");
     expect(passwordField.parentElement).not.toHaveClass("Mui-error");
   });
-
-  //   test("calls closeModal on successful login", async () => {
-  //     const mockLoginUser = jest.fn(() =>
-  //       Promise.resolve({ accessToken: "testToken" })
-  //     );
-  //     const mockCloseModal = jest.fn();
-  //     const { getByLabelText } = render(
-  //       <Login closeModal={mockCloseModal} openSignup={() => {}} />
-  //     );
-  //     const emailField = getByLabelText("Email");
-
-  //     fireEvent.change(emailField, { target: { value: "test@example.com" } });
-  //     expect(mockCloseModal).toHaveBeenCalled();
-  //   });
 });

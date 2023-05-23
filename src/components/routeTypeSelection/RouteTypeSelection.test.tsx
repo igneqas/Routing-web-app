@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import RouteTypeSelection, {
   RouteTypeSelectionProps,
 } from "./RouteTypeSelection";
+import "@testing-library/jest-dom";
 
 describe("RouteTypeSelection", () => {
   const mockChangeHandler = jest.fn();

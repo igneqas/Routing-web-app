@@ -4,7 +4,7 @@ import Map from "./components/map/Map";
 import { useEffect, useMemo, useState } from "react";
 import SearchBar from "./components/searchBar/SearchBar";
 import LoginModal from "./components/loginModal/LoginModal";
-import L, { LatLngExpression } from "leaflet";
+import L, { LatLngExpression, LatLngTuple } from "leaflet";
 import RouteDetails, {
   RouteDetailsObject,
 } from "./components/routeDetails/RouteDetails";
@@ -14,6 +14,7 @@ import SideMenu from "./components/sideMenu/SideMenu";
 import { Box, useMediaQuery } from "@mui/material";
 import RouteTypeSelection from "./components/routeTypeSelection/RouteTypeSelection";
 import LocationChangeRow from "./components/locationChangeRow/LocationChangeRow";
+import RouteSuggestions from "./components/routeSuggestions/RouteSuggestions";
 
 export type CoordsObject = {
   latitude: string;
@@ -36,13 +37,13 @@ const App = () => {
       name: "",
     },
   ]);
-  const [routeCoords, setRouteCoords] = useState<
-    (L.LatLngLiteral | L.LatLngTuple)[]
-  >([]);
+  const [routeCoords, setRouteCoords] = useState<L.LatLngTuple[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [route, setRoute] = useState(null);
   const [tripType, setTripType] = useState("vm-forum-liegerad-schnell");
   const [isSearchBarActive, setIsSearchBarActive] = useState(false);
+  const [alternativeIndex, setAlternativeIndex] = useState(0);
+  const [suggestionRoutes, setSuggestionRoutes] = useState<any[]>([]);
 
   const isMobileDevice = useMediaQuery("(max-width: 370px)");
 
@@ -59,7 +60,7 @@ const App = () => {
       !isSearchBarActive
     )
       generateRoute();
-  }, [tripType, locations, isSearchBarActive]);
+  }, [tripType, locations, isSearchBarActive, alternativeIndex]);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -97,7 +98,7 @@ const App = () => {
       formattedCoordinates += `${location?.longitude},${location?.latitude};`;
     });
     formattedCoordinates = formattedCoordinates.slice(0, -1);
-    const url = `http://localhost:8080/route/generate?lonlats=${formattedCoordinates}&profile=${tripType}`;
+    const url = `http://localhost:8080/route/generate?lonlats=${formattedCoordinates}&profile=${tripType}&alternativeidx=${alternativeIndex}`;
     const response = await fetch(url, {
       method: "GET",
     });
@@ -105,18 +106,34 @@ const App = () => {
     setRoute(routeJson);
     const routeCoordinates = routeJson.features[0].geometry.coordinates;
     parseCoordinates(routeCoordinates);
+    setSuggestionRoutes([]);
   };
 
   const parseCoordinates = (routeCoordinates: any) => {
     let x = [];
     for (var i = 0; i < routeCoordinates.length; i++) {
-      x.push([
-        routeCoordinates[i][1],
-        routeCoordinates[i][0],
-      ] as LatLngExpression);
+      x.push([routeCoordinates[i][1], routeCoordinates[i][0]] as LatLngTuple);
     }
     setRouteCoords(x);
   };
+
+  const suggestionRoutesCoordinates = useMemo(() => {
+    let allCoordinates: any[] = [];
+    if (suggestionRoutes.length > 0) {
+      suggestionRoutes.forEach((route: any) => {
+        let coordinates: any[] = [];
+        for (let i = 0; i < route.coordinates.length; i++) {
+          coordinates.push([
+            route.coordinates[i][1],
+            route.coordinates[i][0],
+          ] as LatLngTuple);
+        }
+        allCoordinates.push(coordinates);
+      });
+    }
+
+    return allCoordinates;
+  }, [suggestionRoutes]);
 
   const handleSaveSubmit = async (name: string) => {
     const token = getToken();
@@ -164,6 +181,7 @@ const App = () => {
   const handleViewRouteInfo = (route: any) => {
     setRoute(route);
     parseCoordinates(route.coordinates);
+    setSuggestionRoutes([]);
   };
 
   const SearchFormStyle = useMemo(() => {
@@ -186,16 +204,33 @@ const App = () => {
     }
   });
 
+  const getAlternativeRoute = () => {
+    setAlternativeIndex(alternativeIndex === 2 ? 0 : alternativeIndex + 1);
+  };
+
   return (
     <div className="App">
       <div className="top-toolbar">
+        <RouteSuggestions
+          startPoint={routeCoords[0]}
+          endPoint={routeCoords[routeCoords.length - 1]}
+          profile={details.type}
+          handleViewRouteInfo={handleViewRouteInfo}
+          suggestionRoutes={suggestionRoutes}
+          setSuggestionRoutes={(routes: any) => setSuggestionRoutes(routes)}
+          route={route}
+        />
         {!isLoggedIn ? (
           <LoginModal isMobileDevice={isMobileDevice} />
         ) : (
           <SideMenu handleViewRouteInfo={handleViewRouteInfo} />
         )}
       </div>
-      <Map routeCoords={routeCoords} centerCoords={centerCoords}>
+      <Map
+        routeCoords={routeCoords}
+        centerCoords={centerCoords}
+        suggestionRoutesCoordinates={suggestionRoutesCoordinates}
+      >
         <section className="form-container">
           <div id="search">
             <Box sx={SearchFormStyle}>
@@ -216,6 +251,8 @@ const App = () => {
               <LocationChangeRow
                 setLocations={setLocations}
                 inputCount={locations.length}
+                getAlternativeRoute={getAlternativeRoute}
+                routeExists={route !== null}
               />
               <RouteTypeSelection
                 changeHandler={(value: string) => setTripType(value)}

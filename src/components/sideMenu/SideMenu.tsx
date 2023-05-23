@@ -10,10 +10,14 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import MapIcon from "@mui/icons-material/Map";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { getToken, setToken, signOut } from "../../utils/TokenHandler";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import RouteFilter from "../routeFilter/RouteFilter";
+import dayjs, { Dayjs } from "dayjs";
+import { getRouteType } from "../../utils/RouteUtils";
 
 interface SideMenuParams {
   handleViewRouteInfo: (route: any) => void;
@@ -22,7 +26,68 @@ interface SideMenuParams {
 const SideMenu = (params: SideMenuParams) => {
   const { handleViewRouteInfo } = params;
   const [isOpen, setIsOpen] = useState(false);
-  const [routes, setRoutes] = useState<any>([]);
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [filteredRoutes, setFilteredRoutes] = useState<any>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const [distance, setDistance] = useState<number[]>([0, 20]);
+  const [distanceLimits, setDistanceLimits] = useState<number[]>([0, 20]);
+  const handleDistanceChange = (event: Event, newValue: number | number[]) => {
+    setDistance(newValue as number[]);
+  };
+
+  const [duration, setDuration] = useState<number[]>([0, 20]);
+  const [durationLimits, setDurationLimits] = useState<number[]>([0, 20]);
+  const handleDurationChange = (event: Event, newValue: number | number[]) => {
+    setDuration(newValue as number[]);
+  };
+
+  const [tripType, setTripType] = useState("All");
+  const handleTripTypeChange = (newValue: string) => setTripType(newValue);
+
+  const [date, setDate] = useState<Dayjs[]>([
+    dayjs("2022-04-17"),
+    dayjs("2022-04-17"),
+  ]);
+  const [dateLimits, setDateLimits] = useState<Dayjs[]>([
+    dayjs("2022-04-17"),
+    dayjs("2022-04-17"),
+  ]);
+  const handleDateChange = (newValue: Dayjs[]) => setDate(newValue);
+
+  useEffect(() => {
+    const maxRouteLength =
+      Math.max(...routes.map((route: any) => route.distance)) / 1000;
+    const minRouteLength =
+      Math.min(...routes.map((route: any) => route.distance)) / 1000;
+    setDistanceLimits([minRouteLength, maxRouteLength]);
+    setDistance([minRouteLength, maxRouteLength]);
+
+    const maxRouteDuration =
+      Math.max(...routes.map((route: any) => route.time)) / 60;
+    const minRouteDuration =
+      Math.min(...routes.map((route: any) => route.time)) / 60;
+    setDurationLimits([
+      Math.trunc(minRouteDuration),
+      Math.ceil(maxRouteDuration),
+    ]);
+    setDuration([Math.trunc(minRouteDuration), Math.ceil(maxRouteDuration)]);
+
+    if (routes.length > 0) {
+      const sortedRoutes = routes;
+      sortedRoutes.sort((one: any, two: any) =>
+        one.dateCreated > two.dateCreated ? -1 : 1
+      );
+      const maxRouteDate = (sortedRoutes[0].dateCreated as string).split(
+        " "
+      )[0];
+      const minRouteDate = (
+        sortedRoutes[sortedRoutes.length - 1].dateCreated as string
+      ).split(" ")[0];
+      setDateLimits([dayjs(minRouteDate), dayjs(maxRouteDate)]);
+      setDate([dayjs(minRouteDate), dayjs(maxRouteDate)]);
+    }
+  }, [routes]);
 
   const toggleDrawer =
     (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -60,18 +125,57 @@ const SideMenu = (params: SideMenuParams) => {
     }
   };
 
+  useEffect(() => {
+    const result = routes.filter(
+      (route: any) =>
+        route.distance / 1000 >= distance[0] &&
+        route.distance / 1000 <= distance[1] &&
+        route.time / 60 >= duration[0] &&
+        route.time / 60 <= duration[1] &&
+        (dayjs(route.dateCreated.split(" ")[0]).isAfter(date[0], "day") ||
+          dayjs(route.dateCreated.split(" ")[0]).isSame(date[0], "day")) &&
+        (dayjs(route.dateCreated.split(" ")[0]).isBefore(date[1], "day") ||
+          dayjs(route.dateCreated.split(" ")[0]).isSame(date[1], "day")) &&
+        (tripType !== "All" ? getRouteType(route.type) === tripType : true)
+    );
+
+    setFilteredRoutes(result);
+  }, [distance, duration, date, tripType]);
+
   const list = () => (
-    <Box
-      sx={{ width: 250 }}
-      role="presentation"
-      onClick={toggleDrawer(false)}
-      onKeyDown={toggleDrawer(false)}
-    >
-      <Typography variant="h6" style={{ margin: "10px", marginLeft: "15px" }}>
-        My routes
-      </Typography>
-      <List>
-        {[...routes].map((route) => (
+    <Box sx={{ width: 250 }} role="presentation">
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <Typography variant="h6" style={{ margin: "10px", marginLeft: "15px" }}>
+          My routes
+        </Typography>
+        <IconButton
+          style={{ marginRight: "3%" }}
+          onClick={() => {
+            setIsFilterOpen(!isFilterOpen);
+          }}
+        >
+          <FilterAltIcon />
+        </IconButton>
+      </div>
+      {isFilterOpen ? (
+        <RouteFilter
+          distance={distance}
+          distanceLimits={distanceLimits}
+          handleDistanceChange={handleDistanceChange}
+          duration={duration}
+          durationLimits={durationLimits}
+          handleDurationChange={handleDurationChange}
+          date={date}
+          dateLimits={dateLimits}
+          handleDateChange={handleDateChange}
+          tripType={tripType}
+          handleTripTypeChange={handleTripTypeChange}
+        />
+      ) : (
+        <></>
+      )}
+      <List onClick={toggleDrawer(false)} onKeyDown={toggleDrawer(false)}>
+        {[...filteredRoutes].map((route) => (
           <ListItem disablePadding>
             <ListItemButton onClick={() => handleViewRouteInfo(route)}>
               <ListItemIcon>

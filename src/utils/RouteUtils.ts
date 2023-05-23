@@ -33,3 +33,18 @@ enum RouteNames {
   PollutionFree = "Pollution-free",
   Mountain = "Mountain Bike",
 }
+
+export const getRouteColor = (index: number) => {
+  switch (index) {
+    case 0:
+      return "lime";
+    case 1:
+      return "magenta";
+    case 2:
+      return "yellow";
+    case 3:
+      return "orange";
+    case 4:
+      return "#45A27D";
+  }
+};

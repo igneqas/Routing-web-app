@@ -1,7 +1,4 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { IconButton } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
 import "@testing-library/jest-dom";
 
 import LocationChangeRow, { LocationChangeRowProps } from "./LocationChangeRow";
@@ -11,6 +8,8 @@ describe("LocationChangeRow", () => {
   const mockProps: LocationChangeRowProps = {
     setLocations: mockSetLocations,
     inputCount: 3,
+    getAlternativeRoute: jest.fn(),
+    routeExists: false,
   };
 
   afterEach(() => {
