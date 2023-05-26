@@ -1,12 +1,17 @@
 export const formatRoute = (unformattedRoute: any, name: string) => {
-  return {
-    name: name,
-    distance: unformattedRoute.features[0].properties.trackLength,
-    time: unformattedRoute.features[0].properties.totalTime,
-    ascend: unformattedRoute.features[0].properties.filteredAscend,
-    type: unformattedRoute.features[0].properties.name,
-    coordinates: unformattedRoute.features[0].geometry.coordinates,
-  };
+  try {
+    return {
+      name: name,
+      distance: unformattedRoute.features[0].properties.trackLength,
+      time: unformattedRoute.features[0].properties.totalTime,
+      ascend: unformattedRoute.features[0].properties.filteredAscend,
+      type: unformattedRoute.features[0].properties.name,
+      coordinates: unformattedRoute.features[0].geometry.coordinates,
+    };
+  } catch {
+    unformattedRoute.name = name;
+    return unformattedRoute;
+  }
 };
 
 export const getRouteType = (name: string) => {

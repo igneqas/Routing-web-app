@@ -45,7 +45,7 @@ const RouteSuggestions = (props: RouteSuggestionsProps) => {
   };
 
   const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    getRoutes();
+    if (checked) getRoutes();
     setAnchorEl(event.currentTarget);
   };
 
